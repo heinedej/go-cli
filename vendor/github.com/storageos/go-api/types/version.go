@@ -4,6 +4,7 @@ package types
 type VersionInfo struct {
 	Name          string `json:"name"`
 	BuildDate     string `json:"buildDate"`
+	BuildRef      string `json:"buildRef"`
 	Revision      string `json:"revision"`
 	Version       string `json:"version"`
 	APIVersion    string `json:"apiVersion"`

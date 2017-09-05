@@ -47,11 +47,6 @@ func newStorageOSCommand(storageosCli *command.StorageOSCli) *cobra.Command {
 			return storageosCli.ShowHelp(cmd, args)
 		},
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			// daemon command is special, we redirect directly to another binary
-			// if cmd.Name() == "daemon" {
-			// 	return nil
-			// }
-			// flags must be the top-level command flags, not cmd.Flags()
 			opts.Common.SetDefaultOptions(flags)
 			preRun(opts)
 			if err := storageosCli.Initialize(opts); err != nil {
@@ -69,10 +64,7 @@ func newStorageOSCommand(storageosCli *command.StorageOSCli) *cobra.Command {
 
 	setFlagErrorFunc(storageosCli, cmd, flags, opts)
 
-	// setHelpFunc(storageosCli, cmd, flags, opts)
-
 	cmd.SetOutput(storageosCli.Out())
-	// cmd.AddCommand(newDaemonCommand())
 	commands.AddCommands(cmd, storageosCli)
 
 	setValidateArgs(storageosCli, cmd, flags, opts)
@@ -81,7 +73,7 @@ func newStorageOSCommand(storageosCli *command.StorageOSCli) *cobra.Command {
 }
 
 func setFlagErrorFunc(storageosCli *command.StorageOSCli, cmd *cobra.Command, flags *pflag.FlagSet, opts *cliflags.ClientOptions) {
-	// When invoking `docker stack --nonsense`, we need to make sure FlagErrorFunc return appropriate
+	// When invoking `storageos version --nonsense`, we need to make sure FlagErrorFunc return appropriate
 	// output if the feature is not supported.
 	// As above cli.SetupRootCommand(cmd) have already setup the FlagErrorFunc, we will add a pre-check before the FlagErrorFunc
 	// is called.
@@ -92,25 +84,6 @@ func setFlagErrorFunc(storageosCli *command.StorageOSCli, cmd *cobra.Command, fl
 			return err
 		}
 		return flagErrorFunc(cmd, err)
-	})
-}
-
-func setHelpFunc(storageosCli *command.StorageOSCli, cmd *cobra.Command, flags *pflag.FlagSet, opts *cliflags.ClientOptions) {
-	cmd.SetHelpFunc(func(ccmd *cobra.Command, args []string) {
-		initializeStorageOSCli(storageosCli, flags, opts)
-		fmt.Printf("VC: %s\n", storageosCli.Client().ClientVersion())
-		fmt.Printf("HE: %t\n", storageosCli.HasExperimental())
-		if err := isSupported(ccmd, storageosCli.Client().ClientVersion(), storageosCli.HasExperimental()); err != nil {
-			fmt.Printf("ERRROR: %v\n", err)
-			ccmd.Println(err)
-			return
-		}
-
-		hideUnsupportedFeatures(ccmd, storageosCli.Client().ClientVersion(), storageosCli.HasExperimental())
-
-		if err := ccmd.Help(); err != nil {
-			ccmd.Println(err)
-		}
 	})
 }
 
@@ -193,9 +166,7 @@ func main() {
 }
 
 func showVersion() {
-	fmt.Printf("StorageOS version %s, build %s\n", version.Version, version.Revision)
-	// TODO: better version
-	// fmt.Printf("StorageOS API version %s\n", storageosCli.Client().ClientVersion())
+	fmt.Printf("StorageOS CLI version %s, build %s\n", version.Version, version.Revision)
 }
 
 func preRun(opts *cliflags.ClientOptions) {
@@ -246,33 +217,14 @@ func isSupported(cmd *cobra.Command, clientVersion string, hasExperimental bool)
 	if !hasExperimental {
 		for curr := cmd; curr != nil; curr = curr.Parent() {
 			if _, ok := curr.Tags["experimental"]; ok {
-				fmt.Print("e")
 				return errors.New("only supported on a StorageOS with experimental features enabled")
 			}
 		}
 	}
 
 	if cmdVersion, ok := cmd.Tags["version"]; ok && versions.LessThan(clientVersion, cmdVersion) {
-		fmt.Print("ERR: api version\n")
 		return fmt.Errorf("requires API version %s, but the StorageOS API version is %s", cmdVersion, clientVersion)
 	}
-
-	// errs := []string{}
-
-	// cmd.Flags().VisitAll(func(f *pflag.Flag) {
-	// 	if f.Changed {
-	// 		if !isFlagSupported(f, clientVersion) {
-	// 			errs = append(errs, fmt.Sprintf("\"--%s\" requires API version %s, but the StorageOS API version is %s", f.Name, getFlagVersion(f), clientVersion))
-	// 			return
-	// 		}
-	// 		if _, ok := f.Annotations["experimental"]; ok && !hasExperimental {
-	// 			errs = append(errs, fmt.Sprintf("\"--%s\" is only supported on StorageOS with experimental features enabled", f.Name))
-	// 		}
-	// 	}
-	// })
-	// if len(errs) > 0 {
-	// 	return errors.New(strings.Join(errs, "\n"))
-	// }
 
 	return nil
 }

@@ -29,6 +29,7 @@ Server:
  Go version:   {{.Server.GoVersion}}
  Git commit:   {{.Server.Revision}}
  Built:        {{.Server.BuildDate}}
+ Build Ref:    {{.Server.BuildRef}}
  OS/Arch:      {{.Server.OS}}/{{.Server.Arch}}
  Experimental: {{.Server.Experimental}}{{end}}`
 
