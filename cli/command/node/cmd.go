@@ -21,6 +21,8 @@ func NewNodeCommand(storageosCli *command.StorageOSCli) *cobra.Command {
 		newHealthCommand(storageosCli),
 		newCordonCommand(storageosCli),
 		newUncordonCommand(storageosCli),
+		newDrainCommand(storageosCli),
+		newLeaveCommand(storageosCli),
 		newUpdateCommand(storageosCli),
 	)
 	return cmd

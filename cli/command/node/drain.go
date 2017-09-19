@@ -9,27 +9,27 @@ import (
 	"strings"
 )
 
-type cordonOptions struct {
+type drainOptions struct {
 	nodes []string
 }
 
-func newCordonCommand(storageosCli *command.StorageOSCli) *cobra.Command {
-	var opt cordonOptions
+func newDrainCommand(storageosCli *command.StorageOSCli) *cobra.Command {
+	var opt drainOptions
 
 	cmd := &cobra.Command{
-		Use:   "cordon NODE [NODE...]",
-		Short: "Put one or more nodes into an unschedulable state",
+		Use:   "drain NODE [NODE...]",
+		Short: "Drain the volumes from one or more nodes",
 		Args:  cli.RequiresMinArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opt.nodes = args
-			return runCordon(storageosCli, opt)
+			return runDrain(storageosCli, opt)
 		},
 	}
 
 	return cmd
 }
 
-func runCordon(storageosCli *command.StorageOSCli, opt cordonOptions) error {
+func runDrain(storageosCli *command.StorageOSCli, opt drainOptions) error {
 	client := storageosCli.Client()
 	failed := make([]string, 0, len(opt.nodes))
 
@@ -45,8 +45,8 @@ func runCordon(storageosCli *command.StorageOSCli, opt cordonOptions) error {
 			Name:        n.Name,
 			Description: n.Description,
 			Labels:      n.Labels,
-			Cordon:      true,
-			Drain:       n.Drain,
+			Cordon:      n.Cordon,
+			Drain:       true,
 		})
 		if err != nil {
 			failed = append(failed, nodeID)
@@ -57,7 +57,7 @@ func runCordon(storageosCli *command.StorageOSCli, opt cordonOptions) error {
 	}
 
 	if len(failed) > 0 {
-		return fmt.Errorf("Failed to cordon: %s", strings.Join(failed, ", "))
+		return fmt.Errorf("Failed to drain: %s", strings.Join(failed, ", "))
 	}
 	return nil
 }

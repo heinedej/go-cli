@@ -46,6 +46,7 @@ func runUncordon(storageosCli *command.StorageOSCli, opt uncordonOptions) error 
 			Description: n.Description,
 			Labels:      n.Labels,
 			Cordon:      false,
+			Drain:       n.Drain,
 		})
 		if err != nil {
 			failed = append(failed, nodeID)

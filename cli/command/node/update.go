@@ -73,6 +73,7 @@ func runUpdate(storageosCli *command.StorageOSCli, opt updateOptions, nodeID str
 		Description: n.Description,
 		Labels:      n.Labels,
 		Cordon:      n.Cordon,
+		Drain:       n.Drain,
 	}); err != nil {
 		return fmt.Errorf("Failed to update node (%s): %v", nodeID, err)
 	}

@@ -9,27 +9,27 @@ import (
 	"strings"
 )
 
-type cordonOptions struct {
+type leaveOptions struct {
 	nodes []string
 }
 
-func newCordonCommand(storageosCli *command.StorageOSCli) *cobra.Command {
-	var opt cordonOptions
+func newLeaveCommand(storageosCli *command.StorageOSCli) *cobra.Command {
+	var opt leaveOptions
 
 	cmd := &cobra.Command{
-		Use:   "cordon NODE [NODE...]",
-		Short: "Put one or more nodes into an unschedulable state",
+		Use:   "leave NODE [NODE...]",
+		Short: "Make one or more nodes leave the cluster",
 		Args:  cli.RequiresMinArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opt.nodes = args
-			return runCordon(storageosCli, opt)
+			return runLeave(storageosCli, opt)
 		},
 	}
 
 	return cmd
 }
 
-func runCordon(storageosCli *command.StorageOSCli, opt cordonOptions) error {
+func runLeave(storageosCli *command.StorageOSCli, opt leaveOptions) error {
 	client := storageosCli.Client()
 	failed := make([]string, 0, len(opt.nodes))
 
@@ -45,8 +45,9 @@ func runCordon(storageosCli *command.StorageOSCli, opt cordonOptions) error {
 			Name:        n.Name,
 			Description: n.Description,
 			Labels:      n.Labels,
-			Cordon:      true,
+			Cordon:      n.Cordon,
 			Drain:       n.Drain,
+			Health:      "left",
 		})
 		if err != nil {
 			failed = append(failed, nodeID)
@@ -57,7 +58,7 @@ func runCordon(storageosCli *command.StorageOSCli, opt cordonOptions) error {
 	}
 
 	if len(failed) > 0 {
-		return fmt.Errorf("Failed to cordon: %s", strings.Join(failed, ", "))
+		return fmt.Errorf("Node failed to leave: %s", strings.Join(failed, ", "))
 	}
 	return nil
 }
